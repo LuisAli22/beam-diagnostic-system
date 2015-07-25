@@ -1,25 +1,33 @@
 (ns beam-diagnostic-system.core
-  (:use [beam-diagnostic-system.ui.terminal]
-  	[beam-diagnostic-system.model.core]))
+  (:use [beam-diagnostic-system.util.definitions]
+         [beam-diagnostic-system.model.diagnoseBeam]
+  )
+  (:require [clojure.tools.cli :refer [parse-opts]]
+            [clojure.string :as string])
+)
+(defn usage [optionsSummary]
+  (->> ["Usage: lein run -- [options]"
+        ""
+        "Options:"
+        optionsSummary
+        ""]
+       (string/join \newline)))
 
-; https://clojuredocs.org/clojure.core/try
+(defn errorMessage [errors]
+  (str "The following errors occurred while parsing your command:\n\n"
+       (string/join \newline errors)))
 
-
-(defn ingresarParams 
-	"Se obtienen las caracteristicas de la viga"
-	[mapa i](	
-	do (printFirstQuestion i) (print (getTextParams i)) (flush) 
-	(if (> i 0) 
-		(recur (assoc mapa (getKeyParams i) (read-line)) (dec i) ) 		
-		(if (comprobarVigaBienDimensionada mapa)
-			(println "\nLa viga no necesita refuezo")
-			(println "\nLa viga necesita refuerzo.... esta inconclusoo aqui")
-			)
-		)
-	))
-
-; 14 son las caracteristicas de la viga
-(defn -main
-	"Punto de entrada"
-  [& args]
-  (ingresarParams paramsViga 14))
+(defn exit [status message]
+  (println message)
+  (System/exit status))
+(defn -main [& args]
+  (let [{:keys [options arguments errors summary]} (parse-opts args cliOptions)]
+  ;; Manejar errores y ayuda
+    (cond
+      (:help options) (exit 0 (usage summary))
+      (> (count arguments) 1) (exit 1 (usage summary))
+      errors (exit 1 (errorMessage errors))
+    )
+    (diagnoseBeam (inputBeamDataFile arguments))
+  )
+)
