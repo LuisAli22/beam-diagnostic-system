@@ -51,7 +51,7 @@
 (def ENCHAPEHORMIGON "Enchape de hormigon")
 (def DUPLICARVIGA "Duplicar viga")
 (def FIBRACARBONO "Fibra de carbono")
-(def NONEEDREINFORCEMENT "Ninguno")
+(def NONEEDREINFORCEMENT "No es necesario")
 (def cliOptions
   [
     ["-f" "--file" "REQUIRED: Beam 's data file name"

@@ -136,6 +136,11 @@
   []
   [?resultItem <- InitialDiagnoseResult]
 )
+(defquery checkSelection
+  "Busco los resultados de las verificaciones realizadas"
+  []
+  [?reinforcementItem <- Refuerzo]
+)
 (defn printVerifications!
   "Imprime el resultado de las verificaciones realllizadas en esta sesión"
   [session]
@@ -146,7 +151,7 @@
   session
 )
 (defn printOriginalBeamDiagnose!
-  "Imprime el resultado de las verificaciones realllizadas en esta sesión"
+  "Imprime el diagnóstico de la viga original en esta sesión"
   [session]
   (doseq [result (query session checkInitialResult)]
     (println "Resultado del análisis: "
@@ -154,11 +159,11 @@
   session
 )
 (defn printReinforcementSelection!
-  "Imprime el resultado de las verificaciones realllizadas en esta sesión"
+  "Imprime el resultado del refuerzo seleccionado en esta sesión"
   [session]
-  (doseq [result (query session checkInitialResult)]
-    (println "Resultado del análisis: "
-            (get-in result [:?resultItem :resultMessage])))
+  (doseq [result (query session checkSelection)]
+    (println "Refuerzo: "
+            (get-in result [:?reinforcementItem :nombre])))
   session
 )
 (defn startDiagnose [beamDataMap conditionDataMap]
@@ -208,6 +213,6 @@
     (fire-rules)
     (printVerifications!)
     (printOriginalBeamDiagnose!)
-    ()
+    (printReinforcementSelection!)
   )
 )
