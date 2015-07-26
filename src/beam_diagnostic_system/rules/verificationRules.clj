@@ -9,6 +9,9 @@
 (defrecord Corte [capacidad solicitacion])
 (defrecord Flexion [capacidad solicitacion])
 (defrecord Verification [name])
+(defrecord InitialDiagnoseResult [resultMessage])
+(defrecord Condition [tiempo costo espacio carga adquisicion])
+(defrecord Refuerzo [nombre])
 (defrecord VigaBienDimensionada [valor])
 (defrule RVerificaAltura
   "Se debe verificar si la viga cumple con la altura mínima"
@@ -48,24 +51,107 @@
   [Corte (>= (/ capacidad solicitacion) 1.0)]
   [Flexion (>= (/ capacidad solicitacion) 1.0)]
   =>
-  (insert! (->Verification
-            OKBEAM))
-            (->VigaBienDimensionada true)
-
+  (insert! (->VigaBienDimensionada true)
+            (->InitialDiagnoseResult OKBEAM))
+)
+(defrule RNoVerificaReqDis
+  [(or
+    (Altura (< verdadera minima))
+    (Seccion (< minima limite))
+    (Seccion (< verdadera minima))
+    (Corte (< (/ capacidad solicitacion) 1.0))
+    (Flexion (< (/ capacidad solicitacion) 1.0)))]
+  =>
+  (insert!  (->VigaBienDimensionada false)
+            (->InitialDiagnoseResult NOTOKBEAM))
+)
+(defrule RRefPerfil
+  [VigaBienDimensionada (= valor false)]
+  [Condition (= tiempo MUYRAPIDO)]
+  [Condition (= costo CARO)]
+  [Condition (= espacio MUCHO)]
+  [Condition (= carga MUCHO)]
+  [Condition (= adquisicion MUYDIFICIL)]
+  =>
+  (insert! (->Refuerzo PERFIL))
+)
+(defrule RRefPlanchaAcero
+  [VigaBienDimensionada (= valor false)]
+  [Condition (= tiempo MUYRAPIDO)]
+  [Condition (= costo CARO)]
+  [Condition (= espacio SUFICIENTE)]
+  [Condition (= carga MODERADO)]
+  [Condition (= adquisicion DIFICIL)]
+  =>
+  (insert! (->Refuerzo PLANCHAACERO))
+)
+(defrule RRefVigaReticulada
+  [VigaBienDimensionada (= valor false)]
+  [Condition (= tiempo RAPIDO)]
+  [Condition (= costo MUYCARO)]
+  [Condition (= espacio MUCHO)]
+  [Condition (= carga SUFICIENTE)]
+  [Condition (= adquisicion DIFICIL)]
+  =>
+  (insert! (->Refuerzo VIGARETICULADA))
+)
+(defrule RRefEnchapeHormigon
+  [VigaBienDimensionada (= valor false)]
+  [Condition (= tiempo MUYLENTO)]
+  [Condition (= costo MUYBARATO)]
+  [Condition (= espacio SUFICIENTE)]
+  [Condition (= carga POCO)]
+  [Condition (= adquisicion FACIL)]
+  =>
+  (insert! (->Refuerzo ENCHAPEHORMIGON))
+)
+(defrule RRefDobleViga
+  [VigaBienDimensionada (= valor false)]
+  [Condition (= tiempo LENTO)]
+  [Condition (= costo BARATO)]
+  [Condition (= espacio MUCHO)]
+  [Condition (= carga MUCHO)]
+  [Condition (= adquisicion MUYFACIL)]
+  =>
+  (insert! (->Refuerzo DUPLICARVIGA))
+)
+(defrule RRefFibra
+  [VigaBienDimensionada (= valor false)]
+  [Condition (= tiempo LENTO)]
+  [Condition (= costo MUYCARO)]
+  [Condition (= espacio POCO)]
+  [Condition (= carga POCO)]
+  [Condition (= adquisicion MUYDIFICIL)]
+  =>
+  (insert! (->Refuerzo FIBRACARBONO))
 )
 (defquery checkValidation
   "Busco los resultados de las verificaciones realizadas"
   []
   [?verificationItem <- Verification]
 )
-(defn printValidation!
+(defquery checkInitialResult
+  "Busca el resultado del análisis inicial"
+  []
+  [?resultItem <- InitialDiagnoseResult]
+)
+(defn printVerifications!
   "Imprime el resultado de las verificaciones realllizadas en esta sesión"
   [session]
+  (println "Verificaciones")
   (doseq [result (query session checkValidation)]
-    (println "Verification item: "
+    (println "\t"
             (get-in result [:?verificationItem :name])))
+  session
 )
-(defn checkDesignRequirements [beamDataMap]
+(defn printOriginalBeamDiagnose!
+  "Imprime el resultado de las verificaciones realllizadas en esta sesión"
+  [session]
+  (doseq [result (query session checkInitialResult)]
+    (println "Resultado del análisis: "
+            (get-in result [:?resultItem :resultMessage])))
+)
+(defn startDiagnose [beamDataMap conditionDataMap]
   (def alturaUtil
     (calcularAlturaUtil (beamDataMap height)
                 (beamDataMap longitudinalBarDiameter)
@@ -103,8 +189,14 @@
                         (beamDataMap lastShearTension))
               (->Flexion  capacidadFlexion
                           (beamDataMap lastBendingMoment))
+              (->Condition  (conditionDataMap TIME)
+                            (conditionDataMap COST)
+                            (conditionDataMap SPACE)
+                            (conditionDataMap LOAD)
+                            (conditionDataMap PURCHASE))
     )
     (fire-rules)
-    (printValidation!)
+    (printVerifications!)
+    (printOriginalBeamDiagnose!)
   )
 )

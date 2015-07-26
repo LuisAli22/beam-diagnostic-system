@@ -5,7 +5,8 @@
         [beam-diagnostic-system.rules.verificationRules])
   (:require [clara.rules :refer :all])
 )
-(defn diagnoseBeam [inputBeamDataFile]
+(defn diagnoseBeam [inputBeamDataFile inputConditionDataFile]
   (def beamDataMap (storeInputToMap inputBeamDataFile))
-  (checkDesignRequirements beamDataMap)
+  (def conditionDataMap (storeInputToMap inputConditionDataFile))
+  (startDiagnose beamDataMap conditionDataMap)
 )
