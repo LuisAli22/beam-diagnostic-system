@@ -9,6 +9,7 @@
 (defrecord Corte [capacidad solicitacion])
 (defrecord Flexion [capacidad solicitacion])
 (defrecord Verification [name])
+(defrecord VigaBienDimensionada [valor])
 (defrule RVerificaAltura
   "Se debe verificar si la viga cumple con la altura mínima"
   [Altura (>= verdadera minima)]
@@ -39,6 +40,18 @@
   =>
   (insert! (->Verification
             OKBINDING))
+)
+(defrule RVerificaReqDis
+  [Altura (>= verdadera minima)]
+  [Seccion (>= minima limite)]
+  [Seccion (>= verdadera minima)]
+  [Corte (>= (/ capacidad solicitacion) 1.0)]
+  [Flexion (>= (/ capacidad solicitacion) 1.0)]
+  =>
+  (insert! (->Verification
+            OKBEAM))
+            (->VigaBienDimensionada true)
+
 )
 (defquery checkValidation
   "Busco los resultados de las verificaciones realizadas"

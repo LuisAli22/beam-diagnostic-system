@@ -21,6 +21,7 @@
 (def OKSECTION "verifica sección")
 (def OKSHEAR "verifica corte")
 (def OKBINDING "verifica flexión")
+(def OKBEAM "VIGA BIEN DIMENSIONADA. NO HACE FALTA REFUERZO")
 (def cliOptions
   [
     ["-f" "--file" "REQUIRED: Beam 's data file name"
