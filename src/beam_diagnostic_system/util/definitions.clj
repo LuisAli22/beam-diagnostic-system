@@ -22,8 +22,8 @@
 (def OKSECTION "Sección ...OK")
 (def OKSHEAR "Corte ...OK")
 (def OKBINDING "Flexión ...OK")
-(def OKBEAM "VIGA BIEN DIMENSIONADA. NO HACE FALTA REFUERZO")
-(def NOTOKBEAM "VIGA MAL DIMENSIONADA. HACE FALTA REFUERZO")
+(def OKBEAM "VIGA BIEN DIMENSIONADA.")
+(def NOTOKBEAM "VIGA MAL DIMENSIONADA")
 (def TIME "Tiempo")
 (def COST "Costo")
 (def SPACE "Espacio")
@@ -51,6 +51,7 @@
 (def ENCHAPEHORMIGON "Enchape de hormigon")
 (def DUPLICARVIGA "Duplicar viga")
 (def FIBRACARBONO "Fibra de carbono")
+(def NONEEDREINFORCEMENT "Ninguno")
 (def cliOptions
   [
     ["-f" "--file" "REQUIRED: Beam 's data file name"

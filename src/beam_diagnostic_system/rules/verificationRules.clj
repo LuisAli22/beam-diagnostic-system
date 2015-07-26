@@ -52,7 +52,8 @@
   [Flexion (>= (/ capacidad solicitacion) 1.0)]
   =>
   (insert! (->VigaBienDimensionada true)
-            (->InitialDiagnoseResult OKBEAM))
+            (->InitialDiagnoseResult OKBEAM)
+            (->Refuerzo NONEEDREINFORCEMENT ))
 )
 (defrule RNoVerificaReqDis
   [(or
@@ -150,6 +151,15 @@
   (doseq [result (query session checkInitialResult)]
     (println "Resultado del análisis: "
             (get-in result [:?resultItem :resultMessage])))
+  session
+)
+(defn printReinforcementSelection!
+  "Imprime el resultado de las verificaciones realllizadas en esta sesión"
+  [session]
+  (doseq [result (query session checkInitialResult)]
+    (println "Resultado del análisis: "
+            (get-in result [:?resultItem :resultMessage])))
+  session
 )
 (defn startDiagnose [beamDataMap conditionDataMap]
   (def alturaUtil
@@ -198,5 +208,6 @@
     (fire-rules)
     (printVerifications!)
     (printOriginalBeamDiagnose!)
+    ()
   )
 )
