@@ -56,12 +56,12 @@
             (->Refuerzo NONEEDREINFORCEMENT ))
 )
 (defrule RNoVerificaReqDis
-  [(or
-    (Altura (< verdadera minima))
-    (Seccion (< minima limite))
-    (Seccion (< verdadera minima))
-    (Corte (< (/ capacidad solicitacion) 1.0))
-    (Flexion (< (/ capacidad solicitacion) 1.0)))]
+  [:or
+    [Altura (< verdadera minima)]
+    [Seccion (< minima limite)]
+    [Seccion (< verdadera minima)]
+    [Corte (< (/ capacidad solicitacion) 1.0)]
+    [Flexion (< (/ capacidad solicitacion) 1.0)]]
   =>
   (insert!  (->VigaBienDimensionada false)
             (->InitialDiagnoseResult NOTOKBEAM))
@@ -125,6 +125,16 @@
   [Condition (= adquisicion MUYDIFICIL)]
   =>
   (insert! (->Refuerzo FIBRACARBONO))
+)
+(defrule RefInviable
+  [VigaBienDimensionada (= valor false)]
+  [:not [Condition (= tiempo MUYRAPIDO) (= costo CARO) (= espacio MUCHO) (= carga MUCHO) (= adquisicion MUYDIFICIL)]]
+  [:not [Condition (= tiempo MUYRAPIDO) (= costo CARO) (= espacio SUFICIENTE) (= carga MODERADO) (= adquisicion DIFICIL)]]
+  [:not [Condition (= tiempo RAPIDO) (= costo MUYCARO) (= espacio MUCHO) (= carga SUFICIENTE) (= adquisicion DIFICIL)]]
+  [:not [Condition (= tiempo MUYLENTO) (= costo MUYBARATO) (= espacio SUFICIENTE) (= carga POCO) (= adquisicion FACIL)]]
+  [:not [Condition (= tiempo LENTO) (= costo BARATO) (= espacio MUCHO) (= carga MUCHO) (= adquisicion MUYFACIL)]]
+  [:not [Condition (= tiempo LENTO) (= costo CARO) (= espacio POCO) (= carga POCO) (= adquisicion MUYDIFICIL)]]
+  => (insert! (->Refuerzo UNFEASIBLEREINFORCEMENT))
 )
 (defquery checkValidation
   "Busco los resultados de las verificaciones realizadas"

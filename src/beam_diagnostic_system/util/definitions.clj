@@ -52,6 +52,7 @@
 (def DUPLICARVIGA "Duplicar viga")
 (def FIBRACARBONO "Fibra de carbono")
 (def NONEEDREINFORCEMENT "No es necesario")
+(def UNFEASIBLEREINFORCEMENT "Refuerzo inviable. Modifique los condicionamientos")
 (def cliOptions
   [
     ["-f" "--file" "REQUIRED: Beam 's data file name"
