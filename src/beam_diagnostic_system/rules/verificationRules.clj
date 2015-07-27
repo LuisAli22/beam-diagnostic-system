@@ -13,6 +13,7 @@
 (defrecord Condition [tiempo costo espacio carga adquisicion])
 (defrecord Refuerzo [nombre])
 (defrecord VigaBienDimensionada [valor])
+(defrecord FinalDiagnoseResult [resultMessage])
 (defrule RVerificaAltura
   "Se debe verificar si la viga cumple con la altura mínima"
   [Altura (>= verdadera minima)]
@@ -118,7 +119,7 @@
 )
 (defrule RRefFibra
   [VigaBienDimensionada (= valor false)]
-  [Condition (= tiempo LENTO)]
+  [Condition (= tiempo MUYRAPIDO)]
   [Condition (= costo MUYCARO)]
   [Condition (= espacio POCO)]
   [Condition (= carga POCO)]
@@ -133,9 +134,75 @@
   [:not [Condition (= tiempo RAPIDO) (= costo MUYCARO) (= espacio MUCHO) (= carga SUFICIENTE) (= adquisicion DIFICIL)]]
   [:not [Condition (= tiempo MUYLENTO) (= costo MUYBARATO) (= espacio SUFICIENTE) (= carga POCO) (= adquisicion FACIL)]]
   [:not [Condition (= tiempo LENTO) (= costo BARATO) (= espacio MUCHO) (= carga MUCHO) (= adquisicion MUYFACIL)]]
-  [:not [Condition (= tiempo LENTO) (= costo CARO) (= espacio POCO) (= carga POCO) (= adquisicion MUYDIFICIL)]]
+  [:not [Condition (= tiempo MUYRAPIDO) (= costo MUYCARO) (= espacio POCO) (= carga POCO) (= adquisicion MUYDIFICIL)]]
   => (insert! (->Refuerzo UNFEASIBLEREINFORCEMENT))
 )
+
+(defrule RVerificaReqDisConRefPerfilOVigaRet
+  [:or [Refuerzo (= nombre PERFIL)] [Refuerzo (= nombre VIGARETICULADA)]]
+  [Seccion (>= (* verdadera 10) minima)]
+  [Corte (>= (/ capacidad (* solicitacion 0.5)) 1.0)]
+  [Flexion (>= (/ capacidad (* solicitacion 0.5)) 1.0)]
+  =>
+  (insert! (->FinalDiagnoseResult OKFINALBEAM))
+)
+(defrule RVerificaReqDisConRefPlanchaAceroOEnchapeHormigon
+  [:or [Refuerzo (= nombre PLANCHAACERO)] [Refuerzo (= nombre ENCHAPEHORMIGON)]]
+  [Seccion (>= (* verdadera 1.5) minima)]
+  [Corte (>= (/ capacidad (* solicitacion 0.75)) 1.0)]
+  [Flexion (>= (/ capacidad (* solicitacion 0.75)) 1.0)]
+  =>
+  (insert! (->FinalDiagnoseResult OKFINALBEAM))
+)
+(defrule RVerificaReqDisConRefDobleViga
+  [Refuerzo (= nombre DUPLICARVIGA)]
+  [Seccion (>= (* verdadera 2) minima)]
+  [Corte (>= (/ capacidad (* solicitacion 0.5)) 1.0)]
+  [Flexion (>= (/ capacidad (* solicitacion 0.5)) 1.0)]
+  =>
+  (insert! (->FinalDiagnoseResult OKFINALBEAM))
+)
+(defrule RVerificaReqDisConRefFibra
+  [Refuerzo (= nombre DUPLICARVIGA)]
+  [Seccion (>= (* verdadera 1.2) minima)]
+  [Corte (>= (/ capacidad (* solicitacion 0.9)) 1.0)]
+  [Flexion (>= (/ capacidad (* solicitacion 0.9)) 1.0)]
+  =>
+  (insert! (->FinalDiagnoseResult OKFINALBEAM))
+)
+(defrule RNoVerificaReqDisConRefPerfilOVigaRet
+  [:or [Refuerzo (= nombre PERFIL)] [Refuerzo (= nombre VIGARETICULADA)]]
+  [:or  [Seccion (< (* verdadera 10) minima)]
+        [Corte (< (/ capacidad (* solicitacion 0.5)) 1.0)]
+        [Flexion (< (/ capacidad (* solicitacion 0.5)) 1.0)]]
+  =>
+  (insert! (->FinalDiagnoseResult MISMATCHREINFORCEMENT))
+)
+(defrule RNoVerificaReqDisConRefPlanchaAceroOEnchapeHormigon
+  [:or  [Refuerzo (= nombre PLANCHAACERO)] [Refuerzo (= nombre ENCHAPEHORMIGON)]]
+  [:or  [Seccion (< (* verdadera 1.5) minima)]
+        [Corte (< (/ capacidad (* solicitacion 0.75)) 1.0)]
+        [Flexion (< (/ capacidad (* solicitacion 0.75)) 1.0)]]
+  =>
+  (insert! (->FinalDiagnoseResult MISMATCHREINFORCEMENT))
+)
+(defrule RNoVerificaReqDisConRefDobleViga
+  [Refuerzo (= nombre DUPLICARVIGA)]
+  [:or  [Seccion (< (* verdadera 2) minima)]
+        [Corte (< (/ capacidad (* solicitacion 0.5)) 1.0)]
+        [Flexion (< (/ capacidad (* solicitacion 0.5)) 1.0)]]
+  =>
+  (insert! (->FinalDiagnoseResult MISMATCHREINFORCEMENT))
+)
+(defrule RNoVerificaReqDisConRefFibra
+  [Refuerzo (= nombre DUPLICARVIGA)]
+  [:or  [Seccion (< (* verdadera 1.2) minima)]
+        [Corte (< (/ capacidad (* solicitacion 0.9)) 1.0)]
+        [Flexion (< (/ capacidad (* solicitacion 0.9)) 1.0)]]
+  =>
+  (insert! (->FinalDiagnoseResult MISMATCHREINFORCEMENT))
+)
+
 (defquery checkValidation
   "Busco los resultados de las verificaciones realizadas"
   []
@@ -145,6 +212,11 @@
   "Busca el resultado del análisis inicial"
   []
   [?resultItem <- InitialDiagnoseResult]
+)
+(defquery checkFinalResult
+  "Busca el resultado del análisis final"
+  []
+  [?resultItem <- FinalDiagnoseResult]
 )
 (defquery checkSelection
   "Busco los resultados de las verificaciones realizadas"
@@ -174,6 +246,14 @@
   (doseq [result (query session checkSelection)]
     (println "Refuerzo: "
             (get-in result [:?reinforcementItem :nombre])))
+  session
+)
+(defn printFinalDiagnose!
+  "Imprime el diagnóstico final"
+  [session]
+  (doseq [result (query session checkFinalResult)]
+    (println "Resultado del análisis de viga con refuerzo: "
+            (get-in result [:?resultItem :resultMessage])))
   session
 )
 (defn startDiagnose [beamDataMap conditionDataMap]
@@ -224,5 +304,6 @@
     (printVerifications!)
     (printOriginalBeamDiagnose!)
     (printReinforcementSelection!)
+    (printFinalDiagnose!)
   )
 )

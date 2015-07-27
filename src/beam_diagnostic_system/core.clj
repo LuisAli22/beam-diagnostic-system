@@ -25,7 +25,7 @@
   ;; Manejar errores y ayuda
     (cond
       (:help options) (exit 0 (usage summary))
-      (> (count arguments) 1) (exit 1 (usage summary))
+      (> (count arguments) 2) (exit 1 (usage summary))
       errors (exit 1 (errorMessage errors))
     )
     (diagnoseBeam (inputBeamDataFile arguments)

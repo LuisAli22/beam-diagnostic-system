@@ -23,6 +23,7 @@
 (def OKSHEAR "Corte ...OK")
 (def OKBINDING "Flexión ...OK")
 (def OKBEAM "VIGA BIEN DIMENSIONADA.")
+(def OKFINALBEAM "VIGA CON REFUERZO BIEN DIMENSIONADA!!")
 (def NOTOKBEAM "VIGA MAL DIMENSIONADA")
 (def TIME "Tiempo")
 (def COST "Costo")
@@ -52,11 +53,14 @@
 (def DUPLICARVIGA "Duplicar viga")
 (def FIBRACARBONO "Fibra de carbono")
 (def NONEEDREINFORCEMENT "No es necesario")
-(def UNFEASIBLEREINFORCEMENT "Refuerzo inviable. Modifique los condicionamientos")
+(def UNFEASIBLEREINFORCEMENT "No se puede construir el refuerzo (Refuerzo inviable). Modifique los condicionamientos para obtener otro refuerzo")
+(def MISMATCHREINFORCEMENT "La viga con el refuerzo seleccionado no cumple los requisitos de diseño. Modifique los condicionamientos para obtener otro refuerzo")
 (def cliOptions
   [
-    ["-f" "--file" "REQUIRED: Beam 's data file name"
+    ["-b" "--beam" "REQUIRED: Beam 's data file name"
     :default defaultBeamInputDataFile]
+    ["-c" "--condition" "REQUIRED: Conditions 's data file name"
+    :default defaultConditionInputDataFile]
     ["-h" "--help" "Show help"
     :flag true
     :default false]]
